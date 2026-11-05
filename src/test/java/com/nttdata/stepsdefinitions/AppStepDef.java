@@ -1,7 +1,7 @@
 package com.nttdata.stepsdefinitions;
 
 import com.nttdata.steps.CartSteps;
-import com.nttdata.steps.InHomeSteps;
+import com.nttdata.steps.HomeSteps;
 
 import net.thucydides.core.annotations.Steps;
 
@@ -12,7 +12,7 @@ import io.cucumber.java.en.When;
 
 public class AppStepDef {
     @Steps
-    InHomeSteps inHome;
+    HomeSteps inHome;
     @Steps
     CartSteps cartSteps;
 

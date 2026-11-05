@@ -76,10 +76,6 @@ public class HomeScreen extends PageObject {
     }
 
 
-    public void esperarElemento(WebElement elemento){
-        waitFor(ExpectedConditions.elementToBeClickable(elemento));
-    }
-
 
 
     public void ingresar() {
