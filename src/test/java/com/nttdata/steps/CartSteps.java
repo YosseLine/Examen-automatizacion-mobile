@@ -1,13 +1,12 @@
 package com.nttdata.steps;
 
-import com.nttdata.screens.LoginScreen;
-import com.nttdata.screens.SearchDetailsScreen;
-import com.nttdata.screens.SearchScreen;
+import com.nttdata.screens.CartScreen;
+
 import net.thucydides.core.annotations.Step;
 
-public class AirbnbSearchSteps {
+public class CartSteps {
 
-    LoginScreen loginScreen;
+    CartScreen loginScreen;
     SearchScreen searchScreen;
     SearchDetailsScreen searchDetailsScreen;
 
