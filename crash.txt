@@ -1,0 +1,19 @@
+--------- beginning of crash
+11-12 21:01:15.237 E/AndroidRuntime(20952): FATAL EXCEPTION: main
+11-12 21:01:15.237 E/AndroidRuntime(20952): Process: com.saucelabs.mydemoapp.android, PID: 20952
+11-12 21:01:15.237 E/AndroidRuntime(20952): java.lang.NullPointerException: Attempt to invoke virtual method 'int java.lang.Integer.intValue()' on a null object reference
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at com.saucelabs.mydemoapp.android.view.fragments.ProductCatalogFragment.lambda$setAdapter$0$ProductCatalogFragment(ProductCatalogFragment.java:140)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at com.saucelabs.mydemoapp.android.view.fragments.ProductCatalogFragment$$ExternalSyntheticLambda0.OnClick(dex-id-2526fc9428e9220496a01f339014aad97f8e647f:4)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at com.saucelabs.mydemoapp.android.view.adapters.ProductsAdapter$1.onClick(ProductsAdapter.java:56)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.view.View.performClick(View.java:7560)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.view.View.performClickInternal(View.java:7533)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.view.View.-$$Nest$mperformClickInternal(View.java:0)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.view.View$PerformClick.run(View.java:29756)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.os.Handler.handleCallback(Handler.java:942)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.os.Looper.loopOnce(Looper.java:211)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.os.Looper.loop(Looper.java:300)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at android.app.ActivityThread.main(ActivityThread.java:8232)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at java.lang.reflect.Method.invoke(Native Method)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+11-12 21:01:15.237 E/AndroidRuntime(20952): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1028)

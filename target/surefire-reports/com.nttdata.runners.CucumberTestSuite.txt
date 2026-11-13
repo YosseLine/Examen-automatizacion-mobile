@@ -1,0 +1,29 @@
+-------------------------------------------------------------------------------
+Test set: com.nttdata.runners.CucumberTestSuite
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 100.1 s <<< FAILURE! -- in com.nttdata.runners.CucumberTestSuite
+Validar funcionalidad del carrito de compras.Validar producto agregado al carrito #2 -- Time elapsed: 34.09 s <<< FAILURE!
+java.lang.AssertionError: Validación de carrito fallida. Cantidad esperada: 1. Cantidad obtenida: 10
+	at com.nttdata.screens.SauceLabsScreen.validarCarrito(SauceLabsScreen.java:138)
+	at com.nttdata.steps.SauceLabsSteps.validarCarrito(SauceLabsSteps.java:25)
+	at com.nttdata.stepsdefinitions.SauceLabsStepDefs.valido_el_carrito_compra_actualice_correctamente(SauceLabsStepDefs.java:52)
+	at ✽.valido el carrito de compra actualice correctamente(file:///C:/Users/Yoshi/Desktop/Examen-automatizacion-mobile/src/test/resources/features/SauceLabs.feature:10)
+
+Validar funcionalidad del carrito de compras.Validar producto agregado al carrito #3 -- Time elapsed: 44.71 s <<< FAILURE!
+java.lang.AssertionError: No fue posible completar la operación con el producto.
+	at com.nttdata.screens.SauceLabsScreen.agregarProducto(SauceLabsScreen.java:93)
+	at com.nttdata.steps.SauceLabsSteps.agregarProducto(SauceLabsSteps.java:20)
+	at com.nttdata.stepsdefinitions.SauceLabsStepDefs.agrego_del_siguiente_producto(SauceLabsStepDefs.java:46)
+	at ✽.agrego 2 del siguiente producto "Sauce Labs Bike Light"(file:///C:/Users/Yoshi/Desktop/Examen-automatizacion-mobile/src/test/resources/features/SauceLabs.feature:9)
+Caused by: org.openqa.selenium.TimeoutException: Expected condition failed: waiting for visibility of element found by AppiumBy.id: com.saucelabs.mydemoapp.android:id/noTV, but... org.openqa.selenium.NoSuchElementException: An element could not be located on the page using the given search parameters..
+(tried for 20 seconds with 500 milliseconds interval)
+Build info: version: '4.52.0', revision: '5b37fd4 5b37fd4d98c08d6a43a0790417f91b8f6f32fb5c'
+System info: os.name: 'Windows 10', os.arch: 'amd64', os.version: '10.0', java.version: '21.0.13'
+Driver info: io.appium.java_client.android.AndroidDriver
+Capabilities {appium:appActivity: com.saucelabs.mydemoapp.and..., appium:appPackage: com.saucelabs.mydemoapp.and..., appium:appWaitActivity: com.saucelabs.mydemoapp.and..., appium:autoGrantPermissions: false, appium:automationName: UiAutomator2, appium:databaseEnabled: false, appium:desired: {appActivity: com.saucelabs.mydemoapp.and..., appPackage: com.saucelabs.mydemoapp.and..., appWaitActivity: com.saucelabs.mydemoapp.and..., autoGrantPermissions: false, automationName: UiAutomator2, deviceName: Xiaomi, disableWindowAnimation: true, forceAppLaunch: true, ignoreHiddenApiPolicyError: true, newCommandTimeout: 300, noReset: true, platformName: ANDROID, platformVersion: 13, skipDeviceInitialization: true, skipLogcatCapture: true, udid: 49USC659SONRRKFQ}, appium:deviceApiLevel: 33, appium:deviceManufacturer: Xiaomi, appium:deviceModel: M2101K7BL, appium:deviceName: 49USC659SONRRKFQ, appium:deviceScreenDensity: 440, appium:deviceScreenSize: 1080x2400, appium:deviceUDID: 49USC659SONRRKFQ, appium:disableWindowAnimation: true, appium:forceAppLaunch: true, appium:ignoreHiddenApiPolicyError: true, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: true, appium:newCommandTimeout: 300, appium:noReset: true, appium:pixelRatio: 2.75, appium:platformVersion: 13, appium:skipDeviceInitialization: true, appium:skipLogcatCapture: true, appium:statBarHeight: 93, appium:takesScreenshot: true, appium:udid: 49USC659SONRRKFQ, appium:viewportRect: {height: 2307, left: 0, top: 93, width: 1080}, appium:warnings: {}, appium:webStorageEnabled: false, platformName: ANDROID}
+Session ID: 8b5ebeda-655b-47a1-ae60-dd562ba958c8
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:85)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:234)
+	at com.nttdata.screens.SauceLabsScreen.agregarProducto(SauceLabsScreen.java:60)
+	... 3 more
+

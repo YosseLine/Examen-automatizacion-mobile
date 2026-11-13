@@ -1,300 +1,242 @@
-# Proyecto de Automatización Mobile - QA Innovation Lab 📱
+# QAInnovationLab — Appium Android Java (Cucumber)
 
-Este repositorio contiene el marco de trabajo (framework) para la automatización de pruebas móviles en **Android** e **iOS** utilizando **Serenity BDD**, **Cucumber**, **Java 8**, **Appium Server 2.x** y **Appium Inspector**.
-
-* **Repositorio:** [https://github.com/jbenitgu/QAInnovationLab](https://github.com/jbenitgu/QAInnovationLab)
-* **Rama:** `automation-mobile`
-* **Aplicación de Prueba (Demo App):** Sauce Labs Mobile Sample App (versión 2.7.1)
+Automation Team / Con fines educativos — automatización mobile Android con
+**Appium + Java + Cucumber**.
 
 ---
 
-## 📌 Tabla de Contenidos
+## 1. Arquitectura del proyecto
 
-1. [Información General del Proyecto](#información-general-del-proyecto)
-2. [Estructura del Proyecto y Capas](#estructura-del-proyecto-y-capas)
-3. [Flujo de Automatización (Paso a Paso)](#flujo-de-automatización-paso-a-paso)
-4. [Información de la Aplicación (APK / IPA)](#información-de-la-aplicación-apk--ipa)
-5. [Requisitos Previos y Configuración de Appium 2.x](#requisitos-previos-y-configuración-de-appium-2x)
-6. [Comandos Principales para Diagnóstico y ADB](#comandos-principales-para-diagnóstico-y-adb)
-7. [Configuración de Appium Inspector](#configuración-de-appium-inspector)
-8. [Ejecución de Pruebas y Monitoreo de Logs](#ejecución-de-pruebas-y-monitoreo-de-logs)
-9. [Generación de Reportes](#generación-de-reportes)
+```
+src/main/java/com/nttdata/
+├── screens/
+│   ├── AppConfigScreen.java       → UNICA clase que levanta/cierra la app (cualquier app)
+│   └── SauceLabsLoginScreen.java  → Solo interaccion con la pantalla de login de Sauce Labs
+├── steps/
+│   ├── AppConfigSteps.java        → Caso de uso generico: iniciar / cerrar / screenshot
+│   └── SauceLabsLoginSteps.java   → Caso de uso: escribir usuario, clave, click login, validar
+└── support/
+    └── ScreenshotAttacher.java    → Utilidad para adjuntar evidencias a Cucumber
 
----
+src/test/java/com/nttdata/
+├── stepsdefinitions/
+│   ├── AppConfigStepsDefs.java    → Step GENERICO: "ingreso al aplicativo" / "cierro el aplicativo"
+│   └── SauceLabsStepDefs.java     → Steps especificos del login (usuario, clave, LOGIN, validar)
+├── hooks/Hooks.java                → @Before / @After globales (logs + screenshot final)
+└── runners/CucumberTestSuite.java → Runner JUnit + Cucumber
 
-## ℹ️ Información General del Proyecto
-
-El proyecto está diseñado bajo la arquitectura BDD (Behavior Driven Development) integrando:
-* **Serenity BDD (v2.4.51):** Facilita la gestión del ciclo de vida del WebDriver/AppiumDriver y genera reportes detallados.
-* **Cucumber (v6 / Serenity Cucumber):** Permite redactar las historias de usuario y escenarios de prueba en formato Gherkin (`.feature`).
-* **Appium Server 2.x:** Motor de automatización para aplicaciones nativas e híbridas en Android e iOS.
-* **JUnit 4 & AssertJ:** Framework de ejecución e inspección de aserciones.
-
----
-
-## 📁 Estructura del Proyecto y Capas
-
-La estructura sigue un diseño modularizado (Clean Code / Page Object Model adaptado a Serenity) para mantener una clara separación de responsabilidades:
-
-```text
-QAInnovationLab/
-├── src/
-│   └── test/
-│       ├── java/
-│       │   └── com/
-│       │       └── nttdata/
-│       │           ├── runners/
-│       │           │   └── CucumberTestSuite.java
-│       │           ├── stepsdefinitions/
-│       │           │   └── SauceLabsStepDef.java
-│       │           ├── steps/
-│       │           │   └── SuaceLabsLoginSteps.java
-│       │           └── screens/
-│       │               ├── LoginScreen.java
-│       │               └── SauceLoginScreen.java
-│       └── resources/
-│           ├── features/
-│           │   └── SauceLabs.feature
-│           └── serenity.conf / serenity.properties
-└── pom.xml
+src/test/resources/
+├── config/
+│   ├── saucelabs.properties               → Capabilities de la app Sauce Labs
+│   └── plantilla-nueva-app.properties.example → Plantilla para agregar una app nueva
+└── features/
+    └── SauceLabs.feature
 ```
 
-### 🔍 Descripción de las Capas:
+### Regla de oro: `AppConfigScreen` SOLO levanta/cierra la app
 
-1. **Features (`src/test/resources/features/`)**
-   * Contiene los archivos `.feature` escritos en sintaxis Gherkin (`Given`, `When`, `Then`, `And`).
-   * **Ejemplo:** `SauceLabs.feature` define los escenarios de prueba funcional (`@Login1`, `@Login2`, `@LoginTest`).
+`AppConfigScreen` es la única clase de todo el framework que:
+- Crea la sesión de Appium (`iniciarAplicacion`)
+- Cierra la app y la sesión (`cerrarAplicacion`)
+- Expone el driver activo a las demás pantallas (`getDriver()`, estático)
+- Toma screenshots (es una acción del dispositivo, no de una pantalla puntual)
 
-2. **Runners (`com.nttdata.runners`)**
-   * Clases ejecutoras anotadas con `@RunWith(CucumberWithSerenity.class)`.
-   * **Archivo:** `CucumberTestSuite.java`
-   * Mapea la ruta de los `.feature`, la ubicación del `glue` (Step Definitions) y los `tags` a ejecutar.
+**No conoce ningún botón, campo o texto de ninguna app.** Es completamente
+genérica: sirve para levantar **cualquier** aplicación Android, siempre y
+cuando exista su archivo `.properties` en `config/`.
 
-3. **Step Definitions (`com.nttdata.stepsdefinitions`)**
-   * Conecta las sentencias Gherkin del `.feature` con código Java usando anotaciones de Cucumber (`@Given`, `@When`, `@Then`).
-   * **Archivo:** `SauceLabsStepDef.java`
-   * Instancia a las clases de la capa `steps` mediante `@Steps`. No interactúa directamente con los elementos de pantalla.
+Cualquier otra pantalla (como `SauceLabsLoginScreen`) obtiene el driver
+así, sin volver a levantar la app:
 
-4. **Steps (`com.nttdata.steps`)**
-   * Lógica de negocio/orquestación intermedia entre el Step Definition y las Pantallas.
-   * **Archivo:** `SuaceLabsLoginSteps.java`
-   * Agrupa llamados a acciones de la pantalla y realiza validaciones/aserciones intermedias.
-
-5. **Screens (`com.nttdata.screens`)**
-   * Representación de los componentes de la interfaz de usuario (Screen Object Pattern).
-   * **Archivos:** `SauceLoginScreen.java`, `LoginScreen.java`
-   * Hereda de `PageObject` de Serenity. Contiene localizadores (`@AndroidFindBy`, `@iOSXCUITFindBy`, `By`) y métodos de bajo nivel para interactuar con los elementos (`click()`, `sendKeys()`, esperas explícitas).
-
----
-
-## 🔄 Flujo de Automatización (Paso a Paso)
-
-El flujo de trabajo estándar para automatizar un nuevo caso de prueba en este proyecto sigue una arquitectura descendente:
-
-```text
-[ 1. Runner ] ──(Inicia ejecución)──> [ 2. Feature ]
-                                             │
-                                             ▼
-[ 5. Screen ] <──(Bajo Nivel)── [ 4. Step ] <──(Negocio)── [ 3. Step Definition ]
-```
-
-### 1. Definición en el Feature (`SauceLabs.feature`)
-Se escribe el escenario en lenguaje natural utilizando Gherkin.
-```gherkin
-@Login2
-Scenario: Login 2 Ok
-  Given ingreso al aplicativo de SauceLabs
-  When ingreso el usuario "standard_user"
-  And ingreso la clave "secret_sauce"
-  And hago clic en LOGIN
-  Then valido el login OK
-```
-
-### 2. Mapeo en el Step Definition (`SauceLabsStepDef.java`)
-Se vinculan las frases del `.feature` con métodos Java mediante `@Given`, `@When`, `@Then` y se delega la ejecución a la clase de la capa `steps` anotada con `@Steps`.
 ```java
-@Steps
-SuaceLabsLoginSteps login;
-
-@When("ingreso el usuario {string}")
-public void ingresoElUsuario(String usuario) {
-    login.ingresoElUsuario(usuario);
-}
+import static com.nttdata.screens.AppConfigScreen.getDriver;
+...
+        AndroidDriver driver = getDriver();
 ```
 
-### 3. Orquestación en la Capa Steps (`SuaceLabsLoginSteps.java`)
-La clase de `steps` coordina las acciones necesarias llamando a los métodos de la pantalla (`Screen`).
-```java
-public class SuaceLabsLoginSteps {
+### Capa por capa
 
-    SauceLoginScreen login;
-
-    public void ingresoElUsuario(String usuario) {
-        login.ingresarUsuario(usuario);
-    }
-}
-```
-
-### 4. Interacción en la Capa Screen (`SauceLoginScreen.java` / `LoginScreen.java`)
-Hereda de `PageObject` de Serenity y utiliza mapeos de Appium (`@AndroidFindBy`) para interactuar con los elementos nativos de la aplicación.
-```java
-public class LoginScreen extends PageObject {
-
-    @AndroidFindBy(xpath = "//android.widget.ImageButton[@content-desc="Close"]")
-    private WebElement btnClose;
-
-    public void clickClose() {
-        WebDriverWait wait = new WebDriverWait(getDriver(), 20);
-        wait.until(ExpectedConditions.elementToBeClickable(btnClose));
-        btnClose.click();
-    }
-}
-```
+| Capa               | Responsabilidad                                                     |
+|---------------------|----------------------------------------------------------------------|
+| `AppConfigScreen`  | Levantar/cerrar CUALQUIER app + screenshot                          |
+| `AppConfigSteps` / `AppConfigStepsDefs` | Caso de uso y step genérico reutilizable en cualquier feature |
+| `XxxScreen`        | Interactuar con los elementos de una pantalla concreta de una app específica |
+| `XxxSteps` / `XxxStepDefs` | Caso de uso y steps específicos de esa app/pantalla          |
 
 ---
 
-## 📱 Información de la Aplicación (APK / IPA)
+## 2. Cómo agregar una app o APK nueva
 
-Para las pruebas se utiliza la app oficial de demostración **Sauce Labs Sample App**:
+**No se toca `AppConfigScreen` ni ninguna otra clase del framework
+base.** Pasos:
 
-* **Nombre de la App:** Sauce Labs Mobile Sample App (v2.7.1)
-* **Descarga Android (.apk):** [Android.SauceLabs.Mobile.Sample.app.2.7.1.apk](https://github.com/saucelabs/sample-app-mobile/releases/download/2.7.1/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk)
-* **Descarga iOS Simulator (.app.zip):** [iOS.Simulator.SauceLabs.Mobile.Sample.app.2.7.1.zip](https://github.com/saucelabs/sample-app-mobile/releases/download/2.7.1/iOS.Simulator.SauceLabs.Mobile.Sample.app.2.7.1.zip)
-* **Descarga iOS Real Device (.ipa):** [iOS.RealDevice.SauceLabs.Mobile.Sample.app.2.7.1.ipa](https://github.com/saucelabs/sample-app-mobile/releases/download/2.7.1/iOS.RealDevice.SauceLabs.Mobile.Sample.app.2.7.1.ipa)
-
-### Credenciales de Prueba por Defecto:
-* **Usuario:** `standard_user`
-* **Contraseña:** `secret_sauce`
-
----
-
-## ⚙️ Requisitos Previos y Configuración de Appium 2.x
-
-### 1. Requisitos del Entorno
-* **Java JDK:** 1.8 (Java 8)
-* **Apache Maven:** 3.6+
-* **Node.js:** >= 16.x
-* **Android Studio & SDK:** Variables de entorno `ANDROID_HOME` configuradas y agregadas al `PATH` (`platform-tools`, `tools`, `emulator`).
-* **Appium Server:** 2.x (`npm install -g appium`)
-* **Controlador uiautomator2:** (`appium driver install uiautomator2`)
-* **Controlador xcuitest (para iOS/Mac):** (`appium driver install xcuitest`)
-
----
-
-## 🛠️ Comandos Principales para Diagnóstico y ADB
-
-### 1. Verificación del Entorno con Appium Doctor
-Permite verificar el estado de instalación de las dependencias requeridas.
-
-```bash
-# Instalación global de Appium Doctor (CLI v2+)
-npm install -g @appium/doctor
-
-# Verificación para Android
-appium-doctor --android
-
-# Verificación para iOS (en macOS)
-appium-doctor --ios
-```
-
-### 2. Comandos ADB Útiles (Android Debug Bridge)
-
-```bash
-# Listar emuladores o dispositivos físicos conectados
-adb devices
-
-# Obtener package y activity de la app activa en pantalla
-adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'
-
-# Instalar el APK en el dispositivo conectado
-adb install ruta/a/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk
-
-# Desinstalar la aplicación del dispositivo
-adb uninstall com.swaglabsmobileapp
-
-# Iniciar servidor Appium 2.x
-appium
-```
-
----
-
-## 🕵️ Configuración de Appium Inspector
-
-Para inspeccionar elementos y obtener localizadores Xpath / Accessibility ID en Appium 2.x:
-
-1. Abrir **Appium Inspector**.
-2. Parámetros de servidor:
-   * **Remote Host:** `127.0.0.1` (o `localhost`)
-   * **Remote Port:** `4723`
-   * **Remote Path:** `/` *(En Appium 2.x el path es `/` y no `/wd/hub`)*.
-3. **Desired Capabilities (JSON Representation)**:
-
-```json
-{
-  "platformName": "Android",
-  "appium:automationName": "UiAutomator2",
-  "appium:deviceName": "emulator-5554",
-  "appium:app": "C:/ruta/a/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk",
-  "appium:appPackage": "com.swaglabsmobileapp",
-  "appium:appActivity": "com.swaglabsmobileapp.MainActivity",
-  "appium:ensureCleanPackage": true
-}
-```
-
----
-
-## 🚀 Ejecución de Pruebas y Monitoreo de Logs
-
-### 1. Ejecución desde el Runner
-Se puede ejecutar directamente la clase `CucumberTestSuite.java` mediante el IDE (Right click -> **Run 'CucumberTestSuite'**).
-
-### 2. Ejecución vía Comandos Maven (Terminal)
-
-```bash
-# Ejecutar la suite completa definida en el Runner
-mvn clean verify
-
-# Ejecutar por Tag específico (definido en los .feature)
-mvn clean verify -Dtags="@LoginTest"
-
-# Ejecutar un único escenario
-mvn clean verify -Dtags="@Login1"
-
-# Ejecutar pasando parámetros del sistema
-mvn clean verify -Dwebdriver.base.url="" -Dtags="@Login2"
-```
-
-### 🔍 ¿Dónde Validar la Ejecución y Diagnosticar Fallas?
-
-1. **Terminal / Logs de Maven (`Console Output`):**
-   * Muestra la progresión de los escenarios de Cucumber.
-   * Indica qué pasos fueron ejecutados, omitidos (`skipped`) o fallidos (`failed`).
-   * Presenta las excepciones de Java y aserciones fallidas (ej. `AssertionError`, `NoSuchElementException`).
-
-2. **Logs del Servidor de Appium (`Appium Server Console`):**
-   * Muestra la comunicación en tiempo real entre el framework (Cliente HTTP W3C) y el dispositivo móvil.
-   * Permite verificar si la sesión se crea correctamente (`POST /session`).
-   * Sirve para depurar errores de búsqueda de elementos (ej. `findElement` timeouts, `UiAutomator2` crashes).
-
-3. **Logs del Dispositivo (`adb logcat`):**
-   * Para revisar fallas internas o cierres inesperados de la aplicación Android durante la ejecución.
-   ```bash
-   adb logcat *:E
+1. Copia `config/plantilla-nueva-app.properties.example`, renómbralo
+   (ej: `miApp.properties`) y completa sus valores (app, appPackage,
+   appActivity, udid, etc).
+2. En tu `.feature`, usa el step genérico ya existente para levantarla:
+   ```gherkin
+   Given ingreso al aplicativo "miApp"
+   ```
+   (Cucumber automáticamente agrega `.properties` y busca el archivo
+   en `config/`).
+3. Crea una `Screen` nueva (ej. `MiAppScreen.java`) SOLO con los
+   locators e interacciones de esa pantalla, obteniendo el driver con
+   `AppConfigScreen.getDriver()`.
+4. Crea su `Steps` y `StepDefs` correspondientes (siguiendo el mismo
+   patrón que `SauceLabsLoginSteps` / `SauceLabsStepDefs`).
+5. Para cerrar la app al final, reutiliza el step genérico:
+   ```gherkin
+   Then cierro el aplicativo "com.mi.paquete"
    ```
 
+Así, el mismo framework sirve para cualquier cantidad de apps sin
+duplicar ni modificar la lógica de manejo del driver.
+
 ---
 
-## 📊 Generación de Reportes
+## 3. Logs en consola
 
-Al finalizar la ejecución con Maven, Serenity BDD genera un reporte interactivo con capturas de pantalla de cada interacción:
+Todas las capas imprimen logs con el prefijo `[NombreDeLaClase]` para
+que el aprendiz pueda seguir el flujo de ejecución en la consola:
 
-* **Ruta del reporte HTML:** `target/site/serenity/index.html`
-
-### Abrir el reporte en navegador:
-```bash
-# En macOS / Linux
-open target/site/serenity/index.html
-
-# En Windows (CMD / PowerShell)
-start target/site/serenity/index.html
 ```
+========================================
+[Hooks] Iniciando escenario: Login exitoso con credenciales validas
+========================================
+[AppConfigStepsDefs] Iniciando aplicativo: saucelabs
+[AppConfigScreen] Leyendo configuracion desde: saucelabs.properties
+[AppConfigScreen] Construyendo capabilities...
+[AppConfigScreen] Conectando a Appium Server en: http://127.0.0.1:4723/
+[AppConfigScreen] Sesion Appium creada correctamente. SessionId: ...
+[ScreenshotAttacher] Adjuntando evidencia: Pantalla inicial
+[SauceLabsLoginSteps] ingresarUsuario -> standard_user
+[SauceLabsLoginScreen] Escribiendo usuario: standard_user
+...
+[SauceLabsLoginScreen] Pantalla de productos visible: true
+[AppConfigStepsDefs] Cerrando aplicativo: com.swaglabsmobileapp
+[AppConfigScreen] Cerrando sesion Appium...
+[Hooks] Escenario 'Login exitoso con credenciales validas' finalizo: EXITOSO
+```
+
+Esto ayuda a diagnosticar rápido en qué paso falló algo, sin depender
+únicamente del reporte HTML de Cucumber.
+
+---
+
+## 4. Feature disponible
+
+### `SauceLabs.feature` (`@SauceLabsLogin`, `@Smoke`)
+Login completo en la app de Sauce Labs (`standard_user` / `secret_sauce`),
+validación de que se llegó a la pantalla de productos, y cierre de la
+app — usando el step genérico de `AppConfigStepsDefs` para levantarla y
+cerrarla.
+
+---
+
+## 5. Requisitos
+
+- Java 21
+- Maven
+- Appium Server corriendo en `http://127.0.0.1:4723/`
+- Un emulador/dispositivo Android disponible (revisa `udid` en
+  `saucelabs.properties`)
+- Actualizar la ruta del `app` (APK) en `saucelabs.properties` según tu
+  equipo local
+
+---
+
+## 6. Cómo ejecutar
+
+```bash
+mvn test
+```
+
+Para correr solo el feature de Sauce Labs (ya es el único disponible,
+pero sirve como ejemplo si agregas más features luego):
+
+```bash
+mvn test -Dcucumber.filter.tags="@SauceLabsLogin"
+```
+
+Los reportes quedan en:
+- `target/cucumber-report.html`
+- `target/cucumber-report.json`
+
+---
+
+## 7. Comandos útiles del emulador (ADB)
+
+Comandos de referencia rápida para depurar y administrar el
+emulador/dispositivo Android durante el desarrollo de las pruebas.
+
+### Dispositivos conectados
+
+```bash
+adb devices
+```
+
+### Iniciar una app manualmente
+
+```bash
+adb shell am start -n com.airbnb.android/com.airbnb.android.feat.splashscreen.SplashScreenActivity
+```
+
+### Obtener la versión de Android del dispositivo conectado
+
+```bash
+adb shell getprop ro.build.version.release
+```
+
+### Reiniciar el servicio de ADB
+
+Útil cuando el emulador queda "colgado" o ADB no detecta el
+dispositivo:
+
+```bash
+adb kill-server & taskkill /f /im adb.exe & taskkill /f /im qemu-system-x86_64.exe & adb start-server
+```
+
+### Logs del dispositivo (logcat)
+
+```bash
+adb logcat
+```
+
+Filtrando por un emulador específico:
+
+```bash
+adb -s emulator-5560 logcat
+```
+
+### Apagar un emulador específico
+
+```bash
+adb -s emulator-5560 emu kill
+```
+
+### Listar y arrancar AVDs (Windows)
+
+```bash
+%localappdata%\Android\Sdk\emulator\emulator -list-avds
+%localappdata%\Android\Sdk\emulator\emulator -avd Pixel_4a_API_30
+%localappdata%\Android\Sdk\emulator\emulator -avd Pixel_4_XL_API_35 -gpu swiftshader_indirect
+```
+
+### Limpiar snapshots de un AVD (Windows)
+
+Borra todos los snapshots guardados de un AVD puntual (soluciona
+arranques corruptos o muy lentos):
+
+```bash
+del /Q /S "%USERPROFILE%\.android\avd\Pixel_4_XL_API_35-v2.avd\snapshots\*"
+```
+
+Borra los snapshots de **todos** los AVDs de una sola pasada:
+
+```bash
+for /D %G in ("%USERPROFILE%\.android\avd\*") do for /D %H in ("%G\snapshots\*") do del /Q /S "%H\*"
+```
+
+> **Nota:** estos comandos de Windows (`del`, `taskkill`, `%localappdata%`,
+> `%USERPROFILE%`) están pensados para ejecutarse en `cmd.exe`. Si usas
+> Git Bash, WSL o PowerShell, la sintaxis de rutas y variables cambia.
